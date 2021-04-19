@@ -17,6 +17,7 @@ type User struct {
 	Age  int
 }
 
+//连接数据库操作
 func connectToMongoDB(uri string, name string, timeout time.Duration, num uint64, collectionName string) (*mongo.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -30,6 +31,7 @@ func connectToMongoDB(uri string, name string, timeout time.Duration, num uint64
 	return client.Database(name).Collection(collectionName), nil
 }
 
+//C操作
 func Create(collection *mongo.Collection, obj []interface{}) []interface{} {
 	insertResult, err := collection.InsertMany(context.TODO(), obj)
 	if err != nil {
@@ -39,6 +41,7 @@ func Create(collection *mongo.Collection, obj []interface{}) []interface{} {
 	return insertResult.InsertedIDs
 }
 
+//R操作
 func Read(collection *mongo.Collection /*, obj []interface{}*/) []interface{} {
 
 	cur, err := collection.Find(context.TODO(), bson.D{{}})
@@ -65,10 +68,25 @@ func Read(collection *mongo.Collection /*, obj []interface{}*/) []interface{} {
 	return results
 }
 
-func Update(collection *mongo.Collection, obj *interface{}) {
-	log.Fatal("not implementd Error")
+//U操作
+func Update(collection *mongo.Collection, fliter, obj *interface{}) *mongo.UpdateResult {
+
+	//log.Fatal("not implemented Error")
+	updateResult, err := collection.UpdateMany(context.TODO(), fliter, obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return updateResult
 }
 
+//D操作
+func Delete(collection *mongo.Collection, fliter interface{}) *mongo.DeleteResult {
+	deleteResult, err := collection.DeleteMany(context.TODO(), fliter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return deleteResult
+}
 func main() {
 	/*ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -85,7 +103,8 @@ func main() {
 	}
 	fmt.Print("connected to MongoDB")*/
 	conn, _ := connectToMongoDB(uri, "sample_mflix", 10*time.Second, 5, "comments")
-	print(Read(conn))
+	result := Read(conn)
+	print(result)
 
 }
 
