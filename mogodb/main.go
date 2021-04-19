@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -102,10 +104,22 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Print("connected to MongoDB")*/
-	conn, _ := connectToMongoDB(uri, "sample_mflix", 10*time.Second, 5, "comments")
-	result := Read(conn)
-	print(result)
+	conn, _ := connectToMongoDB(uri, "GOAPIPROJDB", 10*time.Second, 5, "User")
+	user := User{
+		Name: "ssk",
+		Age:  12,
+	}
 
+	ids := Create(conn, []interface{}{&user, User{
+		Name: "szh",
+		Age:  13,
+	}})
+	for _, id := range ids {
+		id1 := id.(primitive.ObjectID)
+		print("\nid", id1.Hex())
+
+	}
+	fmt.Print("zzw是小猪")
 }
 
 //
