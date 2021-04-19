@@ -20,17 +20,17 @@ type User struct {
 }
 
 //连接数据库操作
-func connectToMongoDB(uri string, name string, timeout time.Duration, num uint64, collectionName string) (*mongo.Collection, error) {
+func connectToMongoDB(uri string, DBName string, timeout time.Duration, numOfConnection uint64, collectionName string) (*mongo.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	o := options.Client().ApplyURI(uri)
-	o.SetMaxPoolSize(num)
+	o.SetMaxPoolSize(numOfConnection)
 	client, err := mongo.Connect(ctx, o)
 	if err != nil {
 		return nil, err
 	}
 
-	return client.Database(name).Collection(collectionName), nil
+	return client.Database(DBName).Collection(collectionName), nil
 }
 
 //C操作
@@ -89,37 +89,28 @@ func Delete(collection *mongo.Collection, fliter interface{}) *mongo.DeleteResul
 	}
 	return deleteResult
 }
+
 func main() {
-	/*ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(
-		"mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin",
-	))
-	if err != nil {
-		log.Fatal(err)
+	lr := LogRecord{
+		jobName: "append",
+		command: "-0t",
+		err:     "no",
+		content: "shabi",
+		tp: TimePoint{
+			startTime: 1,
+			endTime:   2,
+		},
 	}
-
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
-		log.Fatal(err)
+	var iResult *mongo.InsertOneResult
+	var err error
+	collection, _ := connectToMongoDB(uri, "GOAPIPROJDB", 10*time.Second, 5, "test")
+	if iResult, err = collection.InsertOne(context.TODO(), &lr); err != nil {
+		fmt.Print(err)
+		return
 	}
-	fmt.Print("connected to MongoDB")*/
-	conn, _ := connectToMongoDB(uri, "GOAPIPROJDB", 10*time.Second, 5, "User")
-	user := User{
-		Name: "ssk",
-		Age:  12,
-	}
-
-	ids := Create(conn, []interface{}{&user, User{
-		Name: "szh",
-		Age:  13,
-	}})
-	for _, id := range ids {
-		id1 := id.(primitive.ObjectID)
-		print("\nid", id1.Hex())
-
-	}
-	fmt.Print("zzw是小猪")
+	//_id:默认生成一个全局唯一ID
+	id := iResult.InsertedID.(primitive.ObjectID)
+	fmt.Println("自增ID", id.Hex())
 }
 
 //
