@@ -1,4 +1,4 @@
-package main
+package mongodb
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 //连接数据库的语句
-var uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin"
+var Uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin"
 
 //连接数据库操作
 // uri:连接语句
@@ -20,7 +20,7 @@ var uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retr
 // numOfConnection:最大链接数量
 // collectionName:集合的名字
 // 返回:*mongo.Collection操作的集合对象
-func connectToMongoDB(uri string, DBName string, timeout time.Duration, numOfConnection uint64, collectionName string) (*mongo.Collection, error) {
+func ConnectToMongoDB(uri string, DBName string, timeout time.Duration, numOfConnection uint64, collectionName string) (*mongo.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	o := options.Client().ApplyURI(uri)
@@ -118,11 +118,11 @@ func 删库跑路(collection *mongo.Collection) {
 	collection.DeleteMany(context.TODO(), bson.D{{}})
 }
 
+/*测试用的代码罢了
 func main() {
-	collection, _ := connectToMongoDB(uri, "GOAPIPROJDB", 10*time.Second, 5, "test")
+	collection, _ := connectToMongoDB(uri, "GOAPIPROJDB", 10*time.Second, 5, "User")
 	删库跑路(collection)
 	result := Read(collection, bson.D{{}})
 	print(result)
 }
-
-//
+*/

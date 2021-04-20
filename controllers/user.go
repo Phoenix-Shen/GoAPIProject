@@ -3,11 +3,24 @@ package controllers
 import (
 	"encoding/json"
 	"quickstart/models"
+	"quickstart/mongodb"
+	"time"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	beego "github.com/beego/beego/v2/server/web"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+//var uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin"
+var collection *mongo.Collection
+var Id int32 = 0
+
+//获取连接
+func init() {
+	collection, _ = mongodb.ConnectToMongoDB(mongodb.Uri, "GOAPIPROJ", 10*time.Second, 20, "Users")
+}
 
 // Operations about Users
 type UserController struct {
@@ -24,7 +37,7 @@ func (u *UserController) Post() {
 	var user models.User
 	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
 	logs.Info("请求体是", string(u.Ctx.Input.RequestBody))
-	o := orm.NewOrm()
+	/*o := orm.NewOrm()
 	_, err := o.Insert(&user)
 	if err != nil {
 		logs.Info(err.Error())
@@ -33,9 +46,13 @@ func (u *UserController) Post() {
 	err = o.Read(&user)
 	if err != nil {
 		logs.Info(err.Error())
-	}
+	}*/
+	user.Id = Id
+	Id = Id + 1
 
-	u.Data["json"] = map[string]int32{"uid": user.Id}
+	result := mongodb.Create(collection, []interface{}{user})
+
+	u.Data["json"] = map[string]interface{}{"objID": result}
 	u.ServeJSON()
 }
 
@@ -44,12 +61,15 @@ func (u *UserController) Post() {
 // @Success 200 {object} models.User
 // @router / [get]
 func (u *UserController) GetAll() {
-	o := orm.NewOrm()
-	var users []*models.User
-	_, err := o.QueryTable("user").All(&users)
-	if err != nil {
-		logs.Info(err.Error())
-	}
+
+	//var users []*models.User
+	/*
+		o := orm.NewOrm()
+		_, err := o.QueryTable("user").All(&users)
+		if err != nil {
+			logs.Info(err.Error())
+		}*/
+	users := mongodb.Read(collection, bson.D{{}})
 	u.Data["json"] = users
 	u.ServeJSON()
 }
