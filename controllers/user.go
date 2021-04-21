@@ -91,6 +91,7 @@ func (u *UserController) Post() {
 		Id = Id - 1
 		return
 	}
+	//保存自增的ID
 	writeTxt(Id)
 	result := mongodb.Create(collection, []interface{}{user})
 
@@ -126,9 +127,9 @@ func (u *UserController) GetAll() {
 // @router /:uid [get]
 func (u *UserController) Get() {
 	uid, _ := u.GetInt32(":uid")
-	o := orm.NewOrm()
 	user := models.User{Id: uid}
-
+	/*时代变了不用这个代码了
+	o := orm.NewOrm()
 	if uid != 0 {
 		err := o.Read(user, "Id")
 		if err != nil {
@@ -137,7 +138,14 @@ func (u *UserController) Get() {
 			u.Data["json"] = user
 		}
 	}
-	u.ServeJSON()
+	u.ServeJSON()*/
+	cursor, err := collection.Find(context.TODO(), bson.M{"username": user.Id})
+	cursor.All(context.TODO(), &user)
+	if err != nil {
+		u.Data["json"] = err.Error()
+	} else {
+		u.Data["json"] = user
+	}
 }
 
 // @Title Update
@@ -153,12 +161,20 @@ func (u *UserController) Put() {
 		var user models.User
 		json.Unmarshal(u.Ctx.Input.RequestBody, &user)
 		user.Id = uid
-		o := orm.NewOrm()
-		uu, err := o.Update(&user)
+		/*
+			o := orm.NewOrm()
+			uu, err := o.Update(&user)
+			if err != nil {
+				u.Data["json"] = err.Error()
+			} else {
+				u.Data["json"] = uu
+			}
+		*/
+		updateResult, err := collection.UpdateOne(context.TODO(), bson.M{"id": user.Id}, &user)
 		if err != nil {
 			u.Data["json"] = err.Error()
 		} else {
-			u.Data["json"] = uu
+			u.Data["json"] = updateResult.MatchedCount
 		}
 	}
 	u.ServeJSON()
@@ -172,14 +188,22 @@ func (u *UserController) Put() {
 // @router /:uid [delete]
 func (u *UserController) Delete() {
 	uid, _ := u.GetInt32(":uid")
-	o := orm.NewOrm()
-	_, err := o.Delete(&models.User{Id: uid})
+	/*
+		o := orm.NewOrm()
+		_, err := o.Delete(&models.User{Id: uid})
+		if err != nil {
+			logs.Info(err.Error())
+		}
+	*/
+	deleteResult, err := collection.DeleteOne(context.TODO(), bson.M{"id": uid})
 	if err != nil {
-		logs.Info(err.Error())
+		u.Data["json"] = err.Error()
+	} else {
+		u.Data["json"] = "删除的条数是" + strconv.FormatInt(deleteResult.DeletedCount, 10)
 	}
-	u.Redirect("http://127.0.0.1:8080/v1/user", 302)
+	//u.Redirect("http://127.0.0.1:8080/v1/user", 302)
 	//u.Data["json"] = "delete success!"
-	//u.ServeJSON()
+	u.ServeJSON()
 }
 
 // @Title Login
@@ -214,5 +238,15 @@ func (u *UserController) Login() {
 // @router /logout [get]
 func (u *UserController) Logout() {
 	u.Data["json"] = "logout success"
+	u.ServeJSON()
+}
+
+// @Title deleteall
+// @Description 走人辣
+// @Success 200 {string} 可以跑路了
+// @router /deleteall [get]
+func (u *UserController) Deleteall() {
+	mongodb.S删库跑路(collection)
+	u.Data["json"] = "可以跑路了"
 	u.ServeJSON()
 }

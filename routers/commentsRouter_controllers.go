@@ -54,6 +54,15 @@ func init() {
 
     beego.GlobalControllerRouter["quickstart/controllers:UserController"] = append(beego.GlobalControllerRouter["quickstart/controllers:UserController"],
         beego.ControllerComments{
+            Method: "Deleteall",
+            Router: "/deleteall",
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["quickstart/controllers:UserController"] = append(beego.GlobalControllerRouter["quickstart/controllers:UserController"],
+        beego.ControllerComments{
             Method: "Login",
             Router: "/login",
             AllowHTTPMethods: []string{"get"},

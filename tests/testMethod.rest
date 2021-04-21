@@ -3,7 +3,7 @@ Content-Type: application/json
 
 {
     "id":"1",
-    "username":"ikun3",
+    "username":"ikun8",
     "password":"asdf"
 }
 
@@ -15,3 +15,6 @@ DELETE  http://127.0.0.1:8080/v1/user/0
 
 ###login method GET
 GET http://127.0.0.1:8080/v1/user/login?username=ikun&password=asdf
+
+###删库跑路
+GET http://127.0.0.1:8080/v1/user/deleteall
