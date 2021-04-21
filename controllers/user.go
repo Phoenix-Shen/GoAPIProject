@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
+	"os"
 	"quickstart/models"
 	"quickstart/mongodb"
+	"strconv"
 	"time"
 
 	"github.com/beego/beego/v2/client/orm"
@@ -13,13 +17,36 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func writeTxt(id int32) {
+	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
+	defer file.Close()
+	if err != nil {
+		logs.Info("读取文件错误：", err)
+	}
+
+	file.WriteString(strconv.FormatInt(int64(id), 10))
+}
+
 //var uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin"
 var collection *mongo.Collection
 var Id int32 = 0
+var filepath = "conf/config.txt"
 
 //获取连接
 func init() {
 	collection, _ = mongodb.ConnectToMongoDB(mongodb.Uri, "GOAPIPROJ", 10*time.Second, 20, "Users")
+	//初始化ID自增操作
+
+	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
+	defer file.Close()
+	if err != nil {
+		logs.Info("读取文件错误：", err)
+	}
+
+	reader := bufio.NewReader(file)
+	str, _ := reader.ReadString('\n')
+	Id64, _ := strconv.ParseInt(str, 10, 32)
+	Id = int32(Id64)
 }
 
 // Operations about Users
@@ -34,9 +61,13 @@ type UserController struct {
 // @Failure 403 body is empty
 // @router / [post]
 func (u *UserController) Post() {
+	//取得请求体里面的user
 	var user models.User
 	json.Unmarshal(u.Ctx.Input.RequestBody, &user)
+
 	logs.Info("请求体是", string(u.Ctx.Input.RequestBody))
+
+	//时代变了 不用这个代码了
 	/*o := orm.NewOrm()
 	_, err := o.Insert(&user)
 	if err != nil {
@@ -47,9 +78,20 @@ func (u *UserController) Post() {
 	if err != nil {
 		logs.Info(err.Error())
 	}*/
+
+	//完成userID自增
 	user.Id = Id
 	Id = Id + 1
 
+	users := mongodb.Read(collection, bson.M{"username": user.Username})
+	if users != nil {
+		logs.Info("duplicate entry!")
+		u.Data["json"] = "duplicate name!"
+		u.ServeJSON()
+		Id = Id - 1
+		return
+	}
+	writeTxt(Id)
 	result := mongodb.Create(collection, []interface{}{user})
 
 	u.Data["json"] = map[string]interface{}{"objID": result}
@@ -69,7 +111,9 @@ func (u *UserController) GetAll() {
 		if err != nil {
 			logs.Info(err.Error())
 		}*/
-	users := mongodb.Read(collection, bson.D{{}})
+	var users []*models.User
+	cursor, _ := collection.Find(context.TODO(), bson.D{})
+	cursor.All(context.TODO(), &users)
 	u.Data["json"] = users
 	u.ServeJSON()
 }

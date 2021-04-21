@@ -53,7 +53,8 @@ func Create(collection *mongo.Collection, obj []interface{}) []interface{} {
 // @auth      Laozhu
 // @param    collection        *mongo.Collection         "操作的Collection"
 // @param    fliter              interface{}             "筛选器，筛选出要更新的文档"
-// @return    results      []interface{}                 "查询结果返回值为空或者nil代表没查到和错误"
+// @param    outputResult         interface{}            "解码成结构体的输出，需要传引用"
+// @return    results      []interface{}                 "查询结果返回值为空或者nil代表没查到和错误，查询返回键值对形式"
 func Read(collection *mongo.Collection, fliter interface{}) []interface{} {
 
 	cur, err := collection.Find(context.TODO(), fliter)
@@ -61,6 +62,7 @@ func Read(collection *mongo.Collection, fliter interface{}) []interface{} {
 		log.Fatal(err)
 		return nil
 	}
+
 	var results []interface{}
 	for cur.Next(context.TODO()) {
 		// 创建一个值，将单个文档解码为该值
@@ -74,7 +76,6 @@ func Read(collection *mongo.Collection, fliter interface{}) []interface{} {
 	if err := cur.Err(); err != nil {
 		log.Fatal(err)
 	}
-
 	// 完成后关闭游标
 	cur.Close(context.TODO())
 	return results
@@ -114,7 +115,7 @@ func Delete(collection *mongo.Collection, fliter interface{}) *mongo.DeleteResul
 }
 
 //删库跑路
-func 删库跑路(collection *mongo.Collection) {
+func S删库跑路(collection *mongo.Collection) {
 	collection.DeleteMany(context.TODO(), bson.D{{}})
 }
 
