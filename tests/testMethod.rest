@@ -3,18 +3,34 @@ Content-Type: application/json
 
 {
     "id":"1",
-    "username":"小小展玮14",
+    "username":"小小展玮15",
     "password":"asdf"
 }
 
-###get method
+###getall method GET
 GET http://127.0.0.1:8080/v1/user
 
-###delete method
-DELETE  http://127.0.0.1:8080/v1/user/0
+###get method GET
+GET http://127.0.0.1:8080/v1/user/114516
+
+###update method UPDATE
+PUT http://127.0.0.1:8080/v1/user/114516
+Content-Type: application/json
+
+{
+    "id":"114516",
+    "username":"小小展玮14123123",
+    "password":"asdf1213"
+}
+
+###delete method DELETE
+DELETE  http://127.0.0.1:8080/v1/user/114517
 
 ###login method GET
 GET http://127.0.0.1:8080/v1/user/login?username=小小展玮1&password=asdf
 
-###删库跑路
+###logout method GET
+GET http://127.0.0.1:8080/v1/user/logout
+
+###删库跑路 method GET
 GET http://127.0.0.1:8080/v1/user/deleteall
