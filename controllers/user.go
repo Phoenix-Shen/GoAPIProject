@@ -191,7 +191,7 @@ func (u *UserController) Put() {
 		if err != nil {
 			u.Data["json"] = err.Error()
 		} else {
-			u.Data["json"] = updateResult.MatchedCount
+			u.Data["json"] = "操作成功，修改的行数是：" + strconv.Itoa(int(updateResult.ModifiedCount))
 		}
 	}
 	u.ServeJSON()
@@ -248,10 +248,10 @@ func (u *UserController) Login() {
 	err := collection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
 		logs.Info(err.Error())
-		u.Data["json"] = err.Error() + "不存在此用户"
+		u.Data["json"] = err.Error() + "不存在此用户，滚！"
 	} else {
 		if user.Password != password {
-			u.Data["json"] = "密码错误"
+			u.Data["json"] = "密码错误，你再输一次试试？"
 		} else {
 			u.Data["json"] = user
 		}
@@ -276,5 +276,17 @@ func (u *UserController) Logout() {
 func (u *UserController) Deleteall() {
 	mongodb.S删库跑路(collection)
 	u.Data["json"] = "可以跑路了"
+	u.ServeJSON()
+}
+
+var length int64 = 10
+
+// @Title 让张展玮的鸡儿减少1cm
+// @Description 让张展玮的鸡儿减少1cm
+// @Success 200 {string} 让张展玮的鸡儿减少1cm
+// @router /decline [get]
+func (u *UserController) Decline() {
+	length = length - 1
+	u.Data["json"] = "张展玮的鸡儿长度减少了1cm，现在的长度是:" + strconv.FormatInt(length, 10) + "cm"
 	u.ServeJSON()
 }
