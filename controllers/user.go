@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"quickstart/models"
 	"quickstart/mongodb"
 	"strconv"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	beego "github.com/beego/beego/v2/server/web"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,12 +19,17 @@ import (
 
 func writeTxt(id int32) {
 	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
-	defer file.Close()
+
 	if err != nil {
 		logs.Info("读取文件错误：", err)
 	}
 
 	file.WriteString(strconv.FormatInt(int64(id), 10))
+
+	err = file.Close()
+	if err != nil {
+		logs.Info("写入文件失败：", err.Error())
+	}
 }
 
 //var uri string = "mongodb+srv://root:asdf@ssk.3hxej.mongodb.net/GOAPIPROJDB?retryWrites=true&w=majority&authSource=admin"
@@ -37,16 +42,28 @@ func init() {
 	collection, _ = mongodb.ConnectToMongoDB(mongodb.Uri, "GOAPIPROJ", 10*time.Second, 20, "Users")
 	//初始化ID自增操作
 
-	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
-	defer file.Close()
+	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0666)
+
 	if err != nil {
 		logs.Info("读取文件错误：", err)
+		return
 	}
 
 	reader := bufio.NewReader(file)
-	str, _ := reader.ReadString('\n')
+	str, err := reader.ReadString('\n')
+	if err != nil && err != io.EOF {
+		logs.Info("读取文件时候出现了错误" + err.Error())
+		return
+	}
 	Id64, _ := strconv.ParseInt(str, 10, 32)
 	Id = int32(Id64)
+	err = file.Close()
+	if err != nil {
+		logs.Info("关闭文件时候出现了错误" + err.Error())
+		return
+	}
+
+	logs.Info("读取上次的ID成功，id是" + strconv.FormatInt(Id64, 10))
 }
 
 // Operations about Users
@@ -85,7 +102,7 @@ func (u *UserController) Post() {
 
 	users := mongodb.Read(collection, bson.M{"username": user.Username})
 	if users != nil {
-		logs.Info("duplicate entry!")
+		logs.Info("duplicate name!")
 		u.Data["json"] = "duplicate name!"
 		u.ServeJSON()
 		Id = Id - 1
@@ -139,7 +156,7 @@ func (u *UserController) Get() {
 		}
 	}
 	u.ServeJSON()*/
-	cursor, err := collection.Find(context.TODO(), bson.M{"username": user.Id})
+	cursor, err := collection.Find(context.TODO(), bson.M{"id": user.Id})
 	cursor.All(context.TODO(), &user)
 	if err != nil {
 		u.Data["json"] = err.Error()
@@ -217,7 +234,7 @@ func (u *UserController) Login() {
 	username := u.GetString("username")
 	password := u.GetString("password")
 	var user models.User = models.User{Username: username}
-	o := orm.NewOrm()
+	/*o := orm.NewOrm()
 	err := o.Read(&user, "username")
 	if err != nil {
 		logs.Info(err.Error())
@@ -227,8 +244,19 @@ func (u *UserController) Login() {
 	if password != user.Password {
 		u.Data["json"] = "密码错误 我叼你妈的"
 	}
+	*/
+	err := collection.FindOne(context.TODO(), bson.M{"username": username}).Decode(&user)
+	if err != nil {
+		logs.Info(err.Error())
+		u.Data["json"] = err.Error() + "不存在此用户"
+	} else {
+		if user.Password != password {
+			u.Data["json"] = "密码错误"
+		} else {
+			u.Data["json"] = user
+		}
+	}
 
-	u.Data["json"] = user
 	u.ServeJSON()
 }
 
