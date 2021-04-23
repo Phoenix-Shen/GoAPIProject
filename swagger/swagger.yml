@@ -98,6 +98,24 @@ paths:
           description: '{string} delete success!'
         "403":
           description: uid is empty
+  /user/decline:
+    get:
+      tags:
+      - user
+      description: 让张展玮的鸡儿减少1cm
+      operationId: UserController.让张展玮的鸡儿减少1cm
+      responses:
+        "200":
+          description: '{string} 让张展玮的鸡儿减少1cm'
+  /user/deleteall:
+    get:
+      tags:
+      - user
+      description: 走人辣
+      operationId: UserController.deleteall
+      responses:
+        "200":
+          description: '{string} 可以跑路了'
   /user/login:
     get:
       tags:

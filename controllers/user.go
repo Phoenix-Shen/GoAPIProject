@@ -156,13 +156,13 @@ func (u *UserController) Get() {
 		}
 	}
 	u.ServeJSON()*/
-	cursor, err := collection.Find(context.TODO(), bson.M{"id": user.Id})
-	cursor.All(context.TODO(), &user)
+	err := collection.FindOne(context.TODO(), bson.M{"id": user.Id}).Decode(&user)
 	if err != nil {
 		u.Data["json"] = err.Error()
 	} else {
 		u.Data["json"] = user
 	}
+	u.ServeJSON()
 }
 
 // @Title Update
@@ -187,7 +187,7 @@ func (u *UserController) Put() {
 				u.Data["json"] = uu
 			}
 		*/
-		updateResult, err := collection.UpdateOne(context.TODO(), bson.M{"id": user.Id}, &user)
+		updateResult, err := collection.UpdateOne(context.TODO(), bson.M{"id": user.Id}, bson.M{"$set": bson.M{"username": user.Username, "password": user.Password}})
 		if err != nil {
 			u.Data["json"] = err.Error()
 		} else {
@@ -270,7 +270,7 @@ func (u *UserController) Logout() {
 }
 
 // @Title deleteall
-// @Description 走人辣
+// @Description 删掉所有记录
 // @Success 200 {string} 可以跑路了
 // @router /deleteall [get]
 func (u *UserController) Deleteall() {
